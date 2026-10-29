@@ -1,6 +1,6 @@
 # cpuppyplays.github.io
 
-Hello and its time to install Arch Linux.
+Hello! It's time to install Arch Linux.
 
 1. Download the ISO file and slap it into Virtual Box or in any other hypervisor that you choose. I will be using my hosted Proxmox for this.
     1. Download the ISO from https://mirror.arizona.edu/archlinux/iso/2026.10.01/ since its probably the closest and downloaded fast.
