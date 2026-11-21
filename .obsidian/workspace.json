@@ -11,14 +11,12 @@
             "id": "9ebdc335ac50fcd0",
             "type": "leaf",
             "state": {
-              "type": "markdown",
+              "type": "pdf",
               "state": {
-                "file": "DockerCompose/Docker Guide.md",
-                "mode": "source",
-                "source": false
+                "file": "ArchLinux/README.pdf"
               },
-              "icon": "lucide-file",
-              "title": "Docker Guide"
+              "icon": "lucide-file-text",
+              "title": "README"
             }
           }
         ]
@@ -99,7 +97,6 @@
             "state": {
               "type": "backlink",
               "state": {
-                "file": "DockerCompose/Docker Guide.md",
                 "collapseAll": false,
                 "extraContext": false,
                 "sortOrder": "alphabetical",
@@ -118,7 +115,6 @@
             "state": {
               "type": "outgoing-link",
               "state": {
-                "file": "DockerCompose/Docker Guide.md",
                 "linksCollapsed": false,
                 "unlinkedCollapsed": true
               },
@@ -190,6 +186,7 @@
   },
   "active": "6d6f7cb494c17da7",
   "lastOpenFiles": [
+    "DockerCompose/README.md",
     "index.html",
     "New Text Document.txt",
     "ArchLinux/README.pdf",
