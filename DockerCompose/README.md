@@ -226,13 +226,7 @@ Today we will be installing Jellyfin and File Browser Quantum using Docker Compo
         sudo systemctl reload ssh
         ```
 
-    6. Verify that password authentication is disabled:
-
-        ```bash
-        sudo sshd -T | grep -E 'passwordauthentication|kbdinteractiveauthentication|pubkeyauthentication'
-        ```
-
-    7. From your Windows computer, test that password-only authentication is refused:
+    6. From your Windows computer, test that password-only authentication is refused:
 
         ```powershell
         ssh -o PubkeyAuthentication=no -o PreferredAuthentications=password username@10.30.46.123
@@ -243,7 +237,7 @@ Today we will be installing Jellyfin and File Browser Quantum using Docker Compo
         ![Password-only SSH attempt rejected with Permission denied (publickey)](assets/ssh-password-refused.png)
 
 20. Configure the firewall using UFW.
-    1. First install UFW by running `sudo apt install -y ufw`.
+    1. First install UFW by running if its not already installed `sudo apt install -y ufw`.
     2. Now we need to set the default firewall rules. We want to block incoming connections unless we specifically allow them, while still allowing outgoing connections.
 
         ```bash
@@ -276,8 +270,6 @@ Today we will be installing Jellyfin and File Browser Quantum using Docker Compo
     6. If everything is configured correctly, the firewall should show as active with ports 22, 8096, and 8080 allowed. Take a screenshot of the output for the project.
 
     ![Active UFW rules allowing inbound TCP ports 22, 8096, and 8080](assets/ufw-firewall-status.png)
-
-    **Note:** Docker can bypass UFW for published container ports, so allowing or denying a port in UFW does not always control access to Docker containers. Since File Browser Quantum uses Docker port publishing, make sure it is only accessible on a trusted network. Jellyfin is using host networking, so its port is controlled by the VM's firewall.
 
 21. Enable automatic security updates.
     1. Now that the firewall is configured, we are going to enable automatic security updates so Ubuntu can install important security patches without us having to manually check for them.
@@ -313,13 +305,7 @@ Today we will be installing Jellyfin and File Browser Quantum using Docker Compo
 
         ![Ubuntu APT settings showing daily package-list updates and unattended upgrades](assets/ubuntu-automatic-updates.png)
 
-    6. We can also test the automatic updates without actually installing anything by running:
-
-        ```bash
-        sudo unattended-upgrade --dry-run --debug
-        ```
-
-    7. Once finished, automatic security updates should now be enabled. Keep in mind that this updates Ubuntu packages, not the Docker containers themselves.
+    6. Once finished, automatic security updates should now be enabled.
 
 22. Verify that Docker starts automatically after a reboot.
     1. Now that the machine is secured, we need to make sure Docker and our containers will automatically start when the VM reboots.
@@ -426,7 +412,7 @@ Today we will be installing Jellyfin and File Browser Quantum using Docker Compo
 
     8. You should see a file similar to `backup-2026-11-19_10-30-00.tar.gz`.
 
-    9. Run the script one more time to create a second backup. Wait at least one second between runs so the filenames are different.
+    9. Run the script one more time to create a second backup.
 
         ```bash
         sudo /usr/local/bin/backup-jellyfin.sh
@@ -437,8 +423,6 @@ Today we will be installing Jellyfin and File Browser Quantum using Docker Compo
         ```bash
         sudo ls -lh /opt/backups/jellyfin/
         ```
-
-        Take a screenshot of the backup directory for the project.
 
         ![Terminal listing two Jellyfin backup archives in /opt/backups/jellyfin](assets/jellyfin-backup-archives.png)
 
@@ -463,7 +447,7 @@ Today we will be installing Jellyfin and File Browser Quantum using Docker Compo
         sudo docker compose down
         ```
 
-    5. Once the containers are stopped, delete the Jellyfin configuration directory to simulate losing the application's data.
+    5. Once the containers are stopped, make some changes to the configs so it looks like it needs to be restored.
 
         ```bash
         sudo rm -rf /opt/jellyfin/jellyfin/config
@@ -512,7 +496,6 @@ Today we will be installing Jellyfin and File Browser Quantum using Docker Compo
     4. Select the available backup storage and set the backup mode to **Snapshot**.
     5. Click **Backup** and wait for the process to finish.
     6. Once completed, verify that the backup shows as successful in the Backup tab.
-    7. Take a screenshot of the completed backup for the project.
 
         ![Proxmox Backup tab showing the completed VM backup archive](assets/proxmox-vm-backup.png)
 
