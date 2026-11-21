@@ -6,6 +6,8 @@ Today we will be installing Jellyfin and File Browser Quantum using Docker Compo
 
 1. Open Proxmox and take a snapshot of your VM by navigating to **Snapshots > Take Snapshot** and naming it `pre-docker`.
 
+    ![Proxmox Snapshots tab showing the initial pre-docker snapshot](assets/proxmox-pre-docker-snapshot.png)
+
 2. Boot up the machine and install Docker Engine for Ubuntu by running the following commands:
 
     ```bash
@@ -147,6 +149,8 @@ Today we will be installing Jellyfin and File Browser Quantum using Docker Compo
 
 14. Once logged into File Browser Quantum, upload your movie file (`.mp4`) into the `/srv/` directory. After uploading, you can close the browser tab.
 
+    ![File Browser Quantum showing two uploaded movie files in the srv directory](assets/filebrowser-uploaded-media.png)
+
 15. Now it's time to configure Jellyfin. Open the following address in your browser:
 
     `http://10.30.46.123:8096/`
@@ -162,11 +166,15 @@ Today we will be installing Jellyfin and File Browser Quantum using Docker Compo
 
 16. If everything was installed correctly, you should be able to see and watch the movie you uploaded.
 
+    ![Jellyfin home page showing the Movies library and playback progress](assets/jellyfin-movie-library.png)
+
 17. Verify that the containers are running:
 
     ```bash
     sudo docker compose ps
     ```
+
+    ![Docker Compose reports both Jellyfin and File Browser Quantum as healthy](assets/compose-container-status.png)
 
 18. Now it's time to secure the machine!
 
@@ -192,6 +200,8 @@ Today we will be installing Jellyfin and File Browser Quantum using Docker Compo
         ```
 
         Make sure key-based authentication works before continuing to avoid locking yourself out.
+
+        ![Successful SSH login to the Ubuntu VM using the tulsacyber alias](assets/ssh-key-login.png)
 
     4. Once verified, disable password authentication by opening the SSH configuration file:
 
@@ -230,6 +240,8 @@ Today we will be installing Jellyfin and File Browser Quantum using Docker Compo
 
         The connection should be refused.
 
+        ![Password-only SSH attempt rejected with Permission denied (publickey)](assets/ssh-password-refused.png)
+
 20. Configure the firewall using UFW.
     1. First install UFW by running `sudo apt install -y ufw`.
     2. Now we need to set the default firewall rules. We want to block incoming connections unless we specifically allow them, while still allowing outgoing connections.
@@ -262,6 +274,8 @@ Today we will be installing Jellyfin and File Browser Quantum using Docker Compo
         ```
 
     6. If everything is configured correctly, the firewall should show as active with ports 22, 8096, and 8080 allowed. Take a screenshot of the output for the project.
+
+    ![Active UFW rules allowing inbound TCP ports 22, 8096, and 8080](assets/ufw-firewall-status.png)
 
     **Note:** Docker can bypass UFW for published container ports, so allowing or denying a port in UFW does not always control access to Docker containers. Since File Browser Quantum uses Docker port publishing, make sure it is only accessible on a trusted network. Jellyfin is using host networking, so its port is controlled by the VM's firewall.
 
@@ -296,6 +310,8 @@ Today we will be installing Jellyfin and File Browser Quantum using Docker Compo
         ```
 
         The `1` means that Ubuntu will check for updates and run unattended upgrades daily.
+
+        ![Ubuntu APT settings showing daily package-list updates and unattended upgrades](assets/ubuntu-automatic-updates.png)
 
     6. We can also test the automatic updates without actually installing anything by running:
 
@@ -340,7 +356,7 @@ Today we will be installing Jellyfin and File Browser Quantum using Docker Compo
 ## Backups and Restoration
 
 23. Create a backup script for Jellyfin and File Browser Quantum.
-    1. Now that everything is installed and secured, we are going to create a backup script. This script will stop our Docker containers, back up their data, start the containers again, and automatically delete older backups so we only keep the 7 newest ones.
+    1. Now that everything is installed and secured, we are going to create a backup script. This script will stop the Docker containers, back up their data, start the containers again, and automatically delete older backups so we only keep the 7 newest ones.
     2. First create a directory to store the backups by running:
 
         ```bash
@@ -390,10 +406,6 @@ Today we will be installing Jellyfin and File Browser Quantum using Docker Compo
         echo "Backup completed: $DATE"
         ```
 
-        The script uses `tar` to create a compressed archive of our Docker Compose file, Jellyfin configuration, File Browser Quantum configuration, and uploaded media files.
-
-        The `docker compose stop` command makes sure that the containers are not changing their data while the backup is being created.
-
     5. Once the script is saved, give it permission to execute by running:
 
         ```bash
@@ -428,66 +440,70 @@ Today we will be installing Jellyfin and File Browser Quantum using Docker Compo
 
         Take a screenshot of the backup directory for the project.
 
+        ![Terminal listing two Jellyfin backup archives in /opt/backups/jellyfin](assets/jellyfin-backup-archives.png)
+
 24. Test restoring Jellyfin from a backup.
-    1. Now that we have a working backup script, we need to make sure we can actually restore our data if something happens to the application.
-    2. First open Jellyfin at `http://10.30.46.123:8096/` and make sure the movie you uploaded earlier is still visible.
-    3. Take a screenshot of the movie showing in your Jellyfin library. We will use this to compare it after restoring the backup.
-    4. Now run the backup script one more time to make sure the latest changes are saved.
+    1. First open Jellyfin at `http://10.30.46.123:8096/` and make sure the movie you uploaded earlier is still visible.
+    2. Now run the backup script one more time to make sure the latest changes are saved.
 
         ```bash
         sudo /usr/local/bin/backup-jellyfin.sh
         ```
 
-    5. Before deleting anything, check that the backup contains the Jellyfin configuration by running:
+    3. Before deleting anything, check that the backup contains the Jellyfin configuration by running:
 
         ```bash
         sudo tar -tzf "$(sudo ls -1t /opt/backups/jellyfin/backup-*.tar.gz | head -n 1)" | grep 'jellyfin/config/' | head
         ```
 
-    6. Now navigate to the Jellyfin directory and stop the containers:
+    4. Now navigate to the Jellyfin directory and stop the containers:
 
         ```bash
         cd /opt/jellyfin
         sudo docker compose down
         ```
 
-    7. Once the containers are stopped, delete the Jellyfin configuration directory to simulate losing the application's data.
+    5. Once the containers are stopped, delete the Jellyfin configuration directory to simulate losing the application's data.
 
         ```bash
         sudo rm -rf /opt/jellyfin/jellyfin/config
         ```
 
-    8. Now we are going to restore the deleted data using our most recent backup. First find the newest backup:
+        ![Jellyfin during the restore test, showing the blue background and a single movie](assets/jellyfin-before-restore.png)
+
+    6. Now we are going to restore the deleted data using our most recent backup. First find the newest backup:
 
         ```bash
         sudo ls -1t /opt/backups/jellyfin/backup-*.tar.gz | head -n 1
         ```
 
-    9. Copy the filename from the output and restore the backup by running the following command. Replace `BACKUP_FILENAME.tar.gz` with your actual backup filename.
+    7. Copy the filename from the output and restore the backup by running the following command. Replace `name.tar.gz` with your actual backup filename.
 
         ```bash
-        sudo tar -xzf /opt/backups/jellyfin/BACKUP_FILENAME.tar.gz -C /opt/jellyfin
+        sudo tar -xzf /opt/backups/jellyfin/name.tar.gz -C /opt/jellyfin
         ```
 
         This extracts the backed-up files into the original Jellyfin directory.
 
-    10. Once restored, start the containers again by running:
+    8. Once restored, start the containers again by running:
 
         ```bash
         sudo docker compose up -d
         ```
 
-    11. Verify that both containers are running:
+        ![Terminal showing the backup archive being extracted and the containers restarting](assets/restore-backup-terminal.png)
+
+    9. Verify that both containers are running:
 
         ```bash
         sudo docker compose ps
         ```
 
-    12. Now open Jellyfin again at `http://10.30.46.123:8096/` and log in using your original account.
+    10. Now open Jellyfin again at `http://10.30.46.123:8096/` and log in using your original account.
 
-    13. If everything was restored correctly, your original account, settings, and movie library should still be there.
+    11. If everything was restored correctly, your original account, settings, and movie library should still be there.
 
-    14. Take another screenshot showing that your movie is back. This demonstrates that the backup and restoration process worked successfully.
+        ![Restored Jellyfin home page](assets/jellyfin-after-restore.png)
 
 25. Create a full VM backup in Proxmox.
     1. Now that we have tested restoring our application, we are going to create a full backup of the VM using Proxmox.
@@ -498,51 +514,13 @@ Today we will be installing Jellyfin and File Browser Quantum using Docker Compo
     6. Once completed, verify that the backup shows as successful in the Backup tab.
     7. Take a screenshot of the completed backup for the project.
 
-    This backup is different from the script we created earlier. The script only backs up the Docker application data, while the Proxmox backup contains the entire VM.
+        ![Proxmox Backup tab showing the completed VM backup archive](assets/proxmox-vm-backup.png)
 
-## Final Verification
+26. Once everything has been installed, your Jellyfin and File Browser Quantum installation is complete! You can watch your very legally obtained movies through Docker Compose with SSH key authentication, a firewall, automatic security updates, and a working backup and restoration system.
 
-26. Now that everything is installed, secured, and backed up, we are going to verify that all of the requirements have been completed.
-    1. Verify that Docker and both containers are running by doing:
+## Source Links
 
-        ```bash
-        cd /opt/jellyfin
-        sudo docker compose ps
-        ```
-
-    2. Verify that the firewall is enabled:
-
-        ```bash
-        sudo ufw status verbose
-        ```
-
-    3. Verify that automatic updates are configured:
-
-        ```bash
-        cat /etc/apt/apt.conf.d/20auto-upgrades
-        ```
-
-    4. Verify that SSH password authentication is disabled:
-
-        ```bash
-        sudo sshd -T | grep -E 'passwordauthentication|kbdinteractiveauthentication|pubkeyauthentication'
-        ```
-
-    5. Verify that the backup files exist:
-
-        ```bash
-        sudo ls -lh /opt/backups/jellyfin/
-        ```
-
-    6. Open Jellyfin and File Browser Quantum in your browser one final time to make sure both applications are accessible.
-    7. Make sure you have screenshots of the following for your project:
-        - The `pre-docker` snapshot in Proxmox.
-        - The Docker Compose containers running.
-        - Jellyfin showing your username and movie.
-        - SSH password authentication being refused.
-        - The enabled UFW firewall rules.
-        - The backup directory containing multiple archives.
-        - Jellyfin before and after restoring the backup.
-        - The completed Proxmox VM backup.
-
-27. Once everything has been verified, your Jellyfin and File Browser Quantum installation is complete! You can watch your very legally obtained movies through Docker Compose with SSH key authentication, a firewall, automatic security updates, and a working backup and restoration system.
+- [Install Docker Engine on Ubuntu](https://docs.docker.com/engine/install/ubuntu/)
+- [File Browser Quantum Docker setup](https://filebrowserquantum.com/en/docs/getting-started/docker/)
+- [Jellyfin Docker Compose installation](https://jellyfin.org/docs/general/installation/container/?method=docker-compose)
+- [Ubuntu automatic updates](https://ubuntu.com/server/docs/how-to/software/automatic-updates/)
